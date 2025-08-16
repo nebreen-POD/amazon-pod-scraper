@@ -1,0 +1,14 @@
+
+{
+  "name": "amazon-pod-keyword-scraper-ngram",
+  "version": "1.0.0",
+  "description": "Amazon POD keyword scraper with n-gram extraction",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "apify": "^3.0.0",
+    "crawlee": "^3.6.0"
+  }
+}
