@@ -19,6 +19,7 @@ function extractNgrams(text, n = 2) {
 
 // PlaywrightCrawler setup
 const crawler = new PlaywrightCrawler({
+    maxRequestsPerCrawl: maxPages, // <- corrected here
     requestHandler: async ({ page, request, log, enqueueLinks }) => {
         log.info(`Scraping ${request.url}`);
 
@@ -40,13 +41,11 @@ const crawler = new PlaywrightCrawler({
 
         await Actor.pushData(processed);
 
-        // Follow pagination
+        // Follow pagination (no maxRequestsPerCrawl here)
         await enqueueLinks({
             selector: 'a.s-pagination-next',
-            maxRequestsPerCrawl: maxPages,
         });
     },
-    maxRequestsPerCrawl: maxPages,
 });
 
 // Add starting URLs
