@@ -1,68 +1,56 @@
-
 import { Actor } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
+import _ from 'lodash';
+import natural from 'natural';
 
-// Simple n-gram generator
-function generateNgrams(words, n) {
-    let ngrams = [];
-    for (let i = 0; i <= words.length - n; i++) {
-        ngrams.push(words.slice(i, i + n).join(' '));
-    }
-    return ngrams;
+await Actor.init();
+
+const input = await Actor.getInput() || {};
+const { startUrls = [], maxPages = 5, ngramSize = 2 } = input;
+
+// Helper: N-gram extraction
+function extractNgrams(text, n = 2) {
+    if (!text) return [];
+    const tokenizer = new natural.WordTokenizer();
+    const tokens = tokenizer.tokenize(text.toLowerCase());
+    const grams = natural.NGrams.ngrams(tokens, n);
+    return grams.map(g => g.join(' '));
 }
 
-await Actor.main(async () => {
-    const input = await Actor.getInput();
-    const { keywords, pagesPerKeyword = 1, maxItems = 50 } = input;
+// PlaywrightCrawler setup
+const crawler = new PlaywrightCrawler({
+    requestHandler: async ({ page, request, log, enqueueLinks }) => {
+        log.info(`Scraping ${request.url}`);
 
-    const results = [];
-    const crawler = new PlaywrightCrawler({
-        maxRequestsPerCrawl: maxItems,
-        requestHandler: async ({ page, request }) => {
-            const items = await page.$$eval('div.s-main-slot div[data-asin]', (elements) => {
-                return elements.map(el => {
-                    const titleEl = el.querySelector('h2 a span');
-                    const asin = el.getAttribute('data-asin');
-                    const title = titleEl ? titleEl.innerText.trim() : null;
-                    return { asin, title };
-                });
-            });
+        const products = await page.$$eval('div[data-asin]', (items) =>
+            items.map(el => {
+                const title = el.querySelector('h2 a span')?.innerText?.trim();
+                const price = el.querySelector('.a-price .a-offscreen')?.innerText?.trim();
+                const rating = el.querySelector('.a-icon-alt')?.innerText?.trim();
+                const reviews = el.querySelector('.s-link-style .s-underline-text')?.innerText?.trim();
+                return { title, price, rating, reviews };
+            })
+        );
 
-            for (const { asin, title } of items) {
-                if (!asin || !title) continue;
-                const tokens = title.toLowerCase()
-                    .replace(/[^a-z0-9\s]/g, '')
-                    .split(/\s+/)
-                    .filter(t => t.length > 2);
+        // Process with n-grams
+        const processed = products.map(p => ({
+            ...p,
+            ngrams: extractNgrams(p.title, ngramSize),
+        }));
 
-                // Generate n-grams (1 to 3 words)
-                const ngrams = [
-                    ...generateNgrams(tokens, 1),
-                    ...generateNgrams(tokens, 2),
-                    ...generateNgrams(tokens, 3)
-                ];
+        await Actor.pushData(processed);
 
-                results.push({
-                    keywordSearch: request.userData.keyword,
-                    asin,
-                    title,
-                    tokens,
-                    ngrams: Array.from(new Set(ngrams)) // unique n-grams
-                });
-            }
-        }
-    });
-
-    for (const keyword of keywords) {
-        for (let p = 1; p <= pagesPerKeyword; p++) {
-            await crawler.addRequests([{
-                url: `https://www.amazon.com/s?k=${encodeURIComponent(keyword)}&page=${p}`,
-                userData: { keyword }
-            }]);
-        }
-    }
-
-    await crawler.run();
-
-    await Actor.pushData(results);
+        // Follow pagination
+        await enqueueLinks({
+            selector: 'a.s-pagination-next',
+            maxRequestsPerCrawl: maxPages,
+        });
+    },
+    maxRequestsPerCrawl: maxPages,
 });
+
+// Add starting URLs
+await crawler.addRequests(startUrls);
+await crawler.run();
+
+await Actor.exit();

@@ -1,0 +1,26 @@
+{
+  "title": "Amazon POD Scraper Input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "startUrls": {
+      "title": "Start URLs",
+      "type": "array",
+      "description": "List of Amazon search result URLs to start from",
+      "editor": "requestListSources"
+    },
+    "maxPages": {
+      "title": "Max Pages",
+      "type": "integer",
+      "default": 5,
+      "description": "Maximum number of pages to crawl"
+    },
+    "ngramSize": {
+      "title": "N-gram size",
+      "type": "integer",
+      "default": 2,
+      "description": "Size of n-grams to extract from product titles"
+    }
+  },
+  "required": ["startUrls"]
+}

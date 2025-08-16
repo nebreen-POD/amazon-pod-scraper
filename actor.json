@@ -1,30 +1,9 @@
-
 {
-  "name": "amazon-pod-keyword-scraper-ngram",
-  "title": "Amazon POD Keyword Scraper with N-grams",
-  "description": "Scrapes Amazon for POD T-shirt keywords and generates n-grams (1-3 words) from titles.",
-  "version": "1.0",
+  "name": "amazon-pod-scraper",
+  "title": "Amazon POD Scraper",
+  "description": "Scrapes Amazon product listings for POD keyword research.",
+  "version": "0.0",
   "buildTag": "latest",
-  "input": {
-    "type": "object",
-    "properties": {
-      "keywords": {
-        "title": "Search Keywords",
-        "type": "array",
-        "description": "Keywords to search on Amazon.",
-        "items": { "type": "string" }
-      },
-      "pagesPerKeyword": {
-        "title": "Pages Per Keyword",
-        "type": "integer",
-        "default": 1
-      },
-      "maxItems": {
-        "title": "Max Items",
-        "type": "integer",
-        "default": 50
-      }
-    },
-    "required": ["keywords"]
-  }
+  "dockerfile": "./Dockerfile",
+  "baseDockerImage": "apify/actor-node-playwright-chrome:20"
 }
