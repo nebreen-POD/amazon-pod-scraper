@@ -1,12 +1,12 @@
 {
-  "name": "amazon-pod-scraper",
+  "name": "amazon-bestseller-scraper",
   "version": "1.0.0",
+  "description": "Scrapes Amazon Best Seller Novelty T-Shirts by category",
+  "main": "main.js",
   "type": "module",
   "dependencies": {
     "apify": "^3.0.0",
     "crawlee": "^3.14.0",
-    "playwright": "^1.47.0",
-    "lodash": "^4.17.21",
-    "natural": "^6.10.4"
+    "playwright": "^1.47.0"
   }
 }

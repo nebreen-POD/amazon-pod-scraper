@@ -1,55 +1,44 @@
 import { Actor } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
-import _ from 'lodash';
-import natural from 'natural';
 
 await Actor.init();
 
-const input = await Actor.getInput() || {};
-const { startUrls = [], maxPages = 5, ngramSize = 2 } = input;
+const startUrls = [
+    { url: 'https://www.amazon.com/gp/bestsellers/fashion/9056923011', label: 'WOMEN' },
+    { url: 'https://www.amazon.com/gp/bestsellers/fashion/9056987011', label: 'MEN' },
+    { url: 'https://www.amazon.com/gp/bestsellers/fashion/9057040011', label: 'GIRLS' },
+    { url: 'https://www.amazon.com/gp/bestsellers/fashion/9057094011', label: 'BOYS' }
+];
 
-// Helper: N-gram extraction
-function extractNgrams(text, n = 2) {
-    if (!text) return [];
-    const tokenizer = new natural.WordTokenizer();
-    const tokens = tokenizer.tokenize(text.toLowerCase());
-    const grams = natural.NGrams.ngrams(tokens, n);
-    return grams.map(g => g.join(' '));
-}
-
-// PlaywrightCrawler setup
 const crawler = new PlaywrightCrawler({
-    maxRequestsPerCrawl: maxPages, // <- corrected here
-    requestHandler: async ({ page, request, log, enqueueLinks }) => {
-        log.info(`Scraping ${request.url}`);
+    requestHandler: async ({ request, page, enqueueLinks, log }) => {
+        log.info(`Scraping ${request.url} [${request.label}]`);
 
-        const products = await page.$$eval('div[data-asin]', (items) =>
-            items.map(el => {
-                const title = el.querySelector('h2 a span')?.innerText?.trim();
-                const price = el.querySelector('.a-price .a-offscreen')?.innerText?.trim();
-                const rating = el.querySelector('.a-icon-alt')?.innerText?.trim();
-                const reviews = el.querySelector('.s-link-style .s-underline-text')?.innerText?.trim();
-                return { title, price, rating, reviews };
-            })
-        );
+        // Extract product data
+        const products = await page.$$eval('.zg-grid-general-faceout', items => {
+            return items.map(item => {
+                const titleEl = item.querySelector('.p13n-sc-truncate, ._cDEzb_p13n-sc-css-line-clamp-3_g3dy1');
+                const linkEl = item.querySelector('a.a-link-normal');
+                const imgEl = item.querySelector('img');
 
-        // Process with n-grams
-        const processed = products.map(p => ({
-            ...p,
-            ngrams: extractNgrams(p.title, ngramSize),
-        }));
-
-        await Actor.pushData(processed);
-
-        // Follow pagination (no maxRequestsPerCrawl here)
-        await enqueueLinks({
-            selector: 'a.s-pagination-next',
+                return {
+                    title: titleEl ? titleEl.textContent.trim() : null,
+                    url: linkEl ? linkEl.href : null,
+                    image: imgEl ? imgEl.src : null,
+                };
+            });
         });
+
+        for (const product of products) {
+            await Actor.pushData({
+                category: request.label,
+                ...product
+            });
+        }
     },
+    maxRequestsPerCrawl: 50,
 });
 
-// Add starting URLs
-await crawler.addRequests(startUrls);
-await crawler.run();
+await crawler.run(startUrls);
 
 await Actor.exit();
