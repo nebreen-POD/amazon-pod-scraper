@@ -1,11 +1,9 @@
 {
-  "actorSpecification": 1,
-  "name": "amazon-bestseller-scraper",
-  "title": "Amazon Bestseller T-Shirt Scraper",
-  "description": "Scrapes Amazon best seller novelty t-shirts for women, men, girls, and boys.",
-  "version": "0.0",
+  "name": "amazon-pod-scraper-ngrams",
+  "title": "Amazon POD Scraper with Per-Category N-grams",
+  "description": "Scrapes Amazon categories (men/women/boys/girls), collects product data, and aggregates unigrams/bigrams/trigrams per category.",
+  "version": "1.0.1",
   "buildTag": "latest",
-  "defaultRunOptions": {
-    "build": "latest"
-  }
+  "baseDockerImage": "apify/actor-node-playwright-chrome:20",
+  "dockerfile": "./Dockerfile"
 }
