@@ -1,44 +1,87 @@
-import { Actor } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
+import * as Apify from 'apify';
 
-await Actor.init();
+function generateNgrams(tokens, n) {
+    const ngrams = [];
+    for (let i = 0; i <= tokens.length - n; i++) {
+        ngrams.push(tokens.slice(i, i + n).join(' '));
+    }
+    return ngrams;
+}
 
-const startUrls = [
-    { url: 'https://www.amazon.com/gp/bestsellers/fashion/9056923011', label: 'WOMEN' },
-    { url: 'https://www.amazon.com/gp/bestsellers/fashion/9056987011', label: 'MEN' },
-    { url: 'https://www.amazon.com/gp/bestsellers/fashion/9057040011', label: 'GIRLS' },
-    { url: 'https://www.amazon.com/gp/bestsellers/fashion/9057094011', label: 'BOYS' }
-];
+Apify.main(async () => {
+    const input = await Apify.getInput() || {};
+    const categoryUrls = input.categoryUrls || [
+        { category: "men", url: "https://www.amazon.com/s?k=novelty+tshirts+men" },
+        { category: "women", url: "https://www.amazon.com/s?k=novelty+tshirts+women" },
+        { category: "boys", url: "https://www.amazon.com/s?k=novelty+tshirts+boys" },
+        { category: "girls", url: "https://www.amazon.com/s?k=novelty+tshirts+girls" }
+    ];
 
-const crawler = new PlaywrightCrawler({
-    requestHandler: async ({ request, page, enqueueLinks, log }) => {
-        log.info(`Scraping ${request.url} [${request.label}]`);
+    const results = {};
 
-        // Extract product data
-        const products = await page.$$eval('.zg-grid-general-faceout', items => {
-            return items.map(item => {
-                const titleEl = item.querySelector('.p13n-sc-truncate, ._cDEzb_p13n-sc-css-line-clamp-3_g3dy1');
-                const linkEl = item.querySelector('a.a-link-normal');
-                const imgEl = item.querySelector('img');
+    const crawler = new PlaywrightCrawler({
+        maxRequestsPerCrawl: 40, // 10 pages x 4 categories
+        requestHandler: async ({ request, page, enqueueLinks }) => {
+            const category = request.userData.category;
 
-                return {
-                    title: titleEl ? titleEl.textContent.trim() : null,
-                    url: linkEl ? linkEl.href : null,
-                    image: imgEl ? imgEl.src : null,
-                };
+            const products = await page.$$eval('div.s-main-slot div[data-asin]', items => {
+                return items.map(el => {
+                    const title = el.querySelector('h2 a span')?.innerText || '';
+                    const link = el.querySelector('h2 a')?.href || '';
+                    const price = el.querySelector('.a-price span.a-offscreen')?.innerText || '';
+                    const rating = el.querySelector('.a-icon-alt')?.innerText || '';
+                    return { title, link, price, rating };
+                });
             });
-        });
 
-        for (const product of products) {
-            await Actor.pushData({
-                category: request.label,
-                ...product
+            if (!results[category]) {
+                results[category] = { products: [], unigrams: {}, bigrams: {}, trigrams: {} };
+            }
+
+            for (const product of products) {
+                results[category].products.push(product);
+                const tokens = product.title.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+
+                // Unigrams
+                tokens.forEach(w => results[category].unigrams[w] = (results[category].unigrams[w] || 0) + 1);
+
+                // Bigrams
+                generateNgrams(tokens, 2).forEach(bg => results[category].bigrams[bg] = (results[category].bigrams[bg] || 0) + 1);
+
+                // Trigrams
+                generateNgrams(tokens, 3).forEach(tg => results[category].trigrams[tg] = (results[category].trigrams[tg] || 0) + 1);
+            }
+
+            await enqueueLinks({
+                selector: 'a.s-pagination-next',
+                userData: { category }
             });
         }
-    },
-    maxRequestsPerCrawl: 50,
+    });
+
+    for (const { category, url } of categoryUrls) {
+        await crawler.addRequests([{ url, userData: { category } }]);
+    }
+
+    await crawler.run();
+
+    // Convert maps to sorted arrays
+    const finalResults = [];
+    for (const [category, data] of Object.entries(results)) {
+        const formatNgrams = (obj) =>
+            Object.entries(obj)
+                .sort((a, b) => b[1] - a[1])
+                .map(([phrase, count]) => ({ phrase, count }));
+
+        finalResults.push({
+            category,
+            products: data.products,
+            unigrams: formatNgrams(data.unigrams),
+            bigrams: formatNgrams(data.bigrams),
+            trigrams: formatNgrams(data.trigrams)
+        });
+    }
+
+    await Apify.pushData(finalResults);
 });
-
-await crawler.run(startUrls);
-
-await Actor.exit();
