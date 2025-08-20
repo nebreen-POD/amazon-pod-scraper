@@ -31,8 +31,7 @@
         { "category": "men",   "url": "https://www.amazon.com/gp/bestsellers/fashion/9056987011" },
         { "category": "girls", "url": "https://www.amazon.com/gp/bestsellers/fashion/9057040011" },
         { "category": "boys",  "url": "https://www.amazon.com/gp/bestsellers/fashion/9057094011" }
-      ],
-      "editor": "json"
+      ]
     },
     "pagesPerCategory": {
       "title": "Pages per category (1–5)",
