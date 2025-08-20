@@ -1,55 +1,63 @@
 {
   "title": "Input",
+  "description": "Configuration for the Amazon POD Best Sellers scraper.",
   "type": "object",
   "schemaVersion": 1,
   "properties": {
     "categoryUrls": {
       "title": "Category URLs",
+      "description": "Array of category objects to crawl. Each object must include a short category name (e.g., women, men, girls, boys) and the absolute Amazon Best Sellers URL for that category.",
       "type": "array",
+      "items": {
+        "type": "object",
+        "title": "Category",
+        "description": "Single category configuration.",
+        "properties": {
+          "category": {
+            "title": "Category key",
+            "description": "Short category key used to tag results (e.g., women, men, girls, boys).",
+            "type": "string"
+          },
+          "url": {
+            "title": "Category URL",
+            "description": "Absolute URL of the Amazon Best Sellers page to crawl for this category.",
+            "type": "string"
+          }
+        },
+        "required": ["category", "url"]
+      },
       "default": [
-        {
-          "category": "women",
-          "url": "https://www.amazon.com/gp/bestsellers/fashion/9056923011"
-        },
-        {
-          "category": "men",
-          "url": "https://www.amazon.com/gp/bestsellers/fashion/9056987011"
-        },
-        {
-          "category": "girls",
-          "url": "https://www.amazon.com/gp/bestsellers/fashion/9057040011"
-        },
-        {
-          "category": "boys",
-          "url": "https://www.amazon.com/gp/bestsellers/fashion/9057094011"
-        }
+        { "category": "women", "url": "https://www.amazon.com/gp/bestsellers/fashion/9056923011" },
+        { "category": "men",   "url": "https://www.amazon.com/gp/bestsellers/fashion/9056987011" },
+        { "category": "girls", "url": "https://www.amazon.com/gp/bestsellers/fashion/9057040011" },
+        { "category": "boys",  "url": "https://www.amazon.com/gp/bestsellers/fashion/9057094011" }
       ],
       "editor": "json"
     },
     "pagesPerCategory": {
-      "title": "Pages per category (3\u20135)",
+      "title": "Pages per category (1–5)",
+      "description": "How many pagination pages to crawl per category. Keep small (3–5) to reduce blocking.",
       "type": "integer",
-      "default": 5,
+      "default": 3,
       "minimum": 1,
       "maximum": 5
     },
     "useApifyProxy": {
       "title": "Use Apify Proxy",
+      "description": "Enable Apify Proxy to rotate IPs and reduce 429 errors. Recommended.",
       "type": "boolean",
       "default": true
     },
     "proxyGroups": {
       "title": "Proxy groups",
+      "description": "Apify proxy groups to use, e.g., RESIDENTIAL. Leave empty to use default datacenter pool.",
       "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": [
-        "RESIDENTIAL"
-      ]
+      "items": { "type": "string" },
+      "default": ["RESIDENTIAL"]
     },
     "maxBackoffMs": {
       "title": "Max backoff (ms)",
+      "description": "Upper limit for exponential backoff delay when a 429 is encountered.",
       "type": "integer",
       "default": 60000
     }
