@@ -1,10 +1,14 @@
 {
-  "name": "amazon-pod-scraper",
-  "version": "1.0.0",
-  "description": "Scraper for Amazon POD best sellers with n-gram analysis",
-  "main": "main.js",
+  "name": "amazon-pod-scraper-fixed",
+  "version": "1.3.0",
   "type": "module",
+  "main": "main.js",
   "dependencies": {
-    "crawlee": "^3.14.1"
+    "apify": "^3.4.4",
+    "crawlee": "^3.14.1",
+    "playwright": "^1.48.2"
+  },
+  "scripts": {
+    "start": "node main.js"
   }
 }

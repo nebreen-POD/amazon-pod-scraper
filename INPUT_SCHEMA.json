@@ -1,26 +1,58 @@
 {
-  "title": "Amazon POD Scraper Input",
+  "title": "Input",
   "type": "object",
   "schemaVersion": 1,
   "properties": {
-    "startUrls": {
-      "title": "Start URLs",
+    "categoryUrls": {
+      "title": "Category URLs",
       "type": "array",
-      "description": "List of Amazon search result URLs to start from",
-      "editor": "requestListSources"
+      "default": [
+        {
+          "category": "women",
+          "url": "https://www.amazon.com/gp/bestsellers/fashion/9056923011"
+        },
+        {
+          "category": "men",
+          "url": "https://www.amazon.com/gp/bestsellers/fashion/9056987011"
+        },
+        {
+          "category": "girls",
+          "url": "https://www.amazon.com/gp/bestsellers/fashion/9057040011"
+        },
+        {
+          "category": "boys",
+          "url": "https://www.amazon.com/gp/bestsellers/fashion/9057094011"
+        }
+      ],
+      "editor": "json"
     },
-    "maxPages": {
-      "title": "Max Pages",
+    "pagesPerCategory": {
+      "title": "Pages per category (3\u20135)",
       "type": "integer",
       "default": 5,
-      "description": "Maximum number of pages to crawl"
+      "minimum": 1,
+      "maximum": 5
     },
-    "ngramSize": {
-      "title": "N-gram size",
+    "useApifyProxy": {
+      "title": "Use Apify Proxy",
+      "type": "boolean",
+      "default": true
+    },
+    "proxyGroups": {
+      "title": "Proxy groups",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "RESIDENTIAL"
+      ]
+    },
+    "maxBackoffMs": {
+      "title": "Max backoff (ms)",
       "type": "integer",
-      "default": 2,
-      "description": "Size of n-grams to extract from product titles"
+      "default": 60000
     }
   },
-  "required": ["startUrls"]
+  "required": []
 }

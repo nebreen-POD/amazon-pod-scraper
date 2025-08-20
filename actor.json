@@ -1,9 +1,8 @@
 {
-  "name": "amazon-pod-scraper-ngrams",
-  "title": "Amazon POD Scraper with Per-Category N-grams",
-  "description": "Scrapes Amazon categories (men/women/boys/girls), collects product data, and aggregates unigrams/bigrams/trigrams per category.",
-  "version": "1.0.1",
+  "name": "amazon-pod-scraper-fixed",
+  "title": "Amazon POD Best-Sellers (n-grams, anti-429, 3\u20135 pages)",
+  "description": "Scrapes Amazon Best Sellers (women/men/girls/boys), aggregates unigrams/bigrams/trigrams per category. Handles 429 via response.status() in postNavigationHooks.",
+  "version": "1.3.0",
   "buildTag": "latest",
-  "baseDockerImage": "apify/actor-node-playwright-chrome:20",
-  "dockerfile": "./Dockerfile"
+  "baseDockerImage": "apify/actor-node-playwright-chrome:20"
 }
